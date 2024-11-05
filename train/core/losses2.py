@@ -104,8 +104,8 @@ class MultimodalLoss(nn.Module):
         self.beta = beta
         self.delta = delta
         self.device = device
-        self.cls_fn =  nn.CrossEntropyLoss() 
-        #self.cls_fn =  nn.MSELoss() 
+        self.cls_fn =  nn.CrossEntropyLoss() # 交叉熵损失，用于分类任务
+        # self.cls_fn =  nn.MSELoss() # 均方误差损失
         self.orth_fn = OrthLoss()
 
 

@@ -84,6 +84,9 @@ def normlize(x):
 
 
 def setup_seed(seed):
+    """
+    设置生成随机数的种子，方面复现结果
+    """
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
@@ -160,7 +163,7 @@ def mixup_data(img, audio, text, y, alpha=1.0, device='cpu'):
         lam = 1
 
     batch_size = img.size()[0]
-
+    # 随机打乱顺序
     index = torch.randperm(batch_size).to(device)
 
     mixed_img = lam * img + (1 - lam) * img[index, :]

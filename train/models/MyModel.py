@@ -38,9 +38,10 @@ class   MyMultimodal_Integrally(nn.Module):
         #self.bertmodel = BertTextEncoder(use_finetune=True, transformers='bert', pretrained='bert-base-uncased')
 
         # mosi
-        # self.proj_l = nn.Linear(768,32)
-        # self.proj_a = nn.Linear(5,32)
-        # self.proj_v = nn.Linear(20, 32)
+        numlayer = 256
+        self.proj_l = nn.Linear(768,numlayer)
+        self.proj_a = nn.Linear(5,numlayer)
+        self.proj_v = nn.Linear(20, numlayer)
 
         # mosei
         # self.proj_l = nn.Linear(768, 256)
@@ -48,10 +49,10 @@ class   MyMultimodal_Integrally(nn.Module):
         # self.proj_v = nn.Linear(35, 256)
         # #ch-sims
         #256
-        numlayer=256
-        self.proj_l = nn.Linear(768, numlayer)
-        self.proj_a = nn.Linear(33, numlayer)
-        self.proj_v = nn.Linear(709, numlayer)
+        # numlayer=256
+        # self.proj_l = nn.Linear(768, numlayer)
+        # self.proj_a = nn.Linear(33, numlayer)
+        # self.proj_v = nn.Linear(709, numlayer)
         
         self.hidden_size = 256
         depthx=2
@@ -133,7 +134,9 @@ class   MyMultimodal_Integrally(nn.Module):
         # exit(0)
         cls_output = self.cls_head(feat)
         #exit(0)
-        return x_invariant, x_specific_a, x_specific_v, x_specific_t, x_text.mean(dim=1), x_visual, x_audio, x_text
+        # return x_invariant, x_specific_a, x_specific_v, x_specific_t, x_text.mean(dim=1), x_visual, x_audio, x_text
+
+        return x_invariant, x_specific_a, x_specific_v, x_specific_t, cls_output, x_visual, x_audio, x_text
 
 
 def generate_model(opt):

@@ -23,7 +23,8 @@ print(device)
 parser = argparse.ArgumentParser()
 # dataset
 parser.add_argument("--datasetName", type=str, default="sims", required=False)
-parser.add_argument("--dataPath", type=str, default=r"G:\datasets\MOSI\unaligned_39.pkl", required=False)
+# parser.add_argument("--dataPath", type=str, default=r"G:\datasets\MOSI\unaligned_39.pkl", required=False)
+parser.add_argument("--dataPath", type=str, default=r"D:\datasets\MOSI\Processed\unaligned_50.pkl", required=False)
 parser.add_argument("--use_bert", type=bool, default=False, required=False)
 parser.add_argument("--need_data_aligned", type=bool, default=True, required=False)
 parser.add_argument("--need_truncated", type=bool, default=True, required=False)
@@ -69,7 +70,7 @@ def main():
               audio_seq_len=50,
               cross_depth=4
              ).to(device)
-    checkpoint = torch.load(r'checkpoint\CodeTest0524_acc2\save_28_0.7812_0.7812_0.6805_d2.pth')['state_dict']
+    checkpoint = torch.load(r'G:\code\TMT\checkpoint\model.pth')
     model.load_state_dict(checkpoint)
 
     dataLoader = MMDataLoader(args)

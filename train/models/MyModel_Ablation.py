@@ -38,8 +38,12 @@ class MMT_semi(nn.Module):
         # self.proj_v = nn.Conv1d(20, 256, kernel_size=3, padding=(3-1)//2, bias=False)
 
         self.proj_l = nn.Linear(768, 256)
-        self.proj_a = nn.Linear(33, 256)
-        self.proj_v = nn.Linear(709, 256)
+        self.proj_a = nn.Linear(5, 256)
+        self.proj_v = nn.Linear(20, 256)
+
+        # self.proj_l = nn.Linear(768, 256)
+        # self.proj_a = nn.Linear(33, 256)
+        # self.proj_v = nn.Linear(709, 256)
         #v2.0
         # self.proj_l = nn.Linear(768, 256)
         # self.proj_a = nn.Linear(25, 256)
@@ -164,9 +168,11 @@ class MMT_semi(nn.Module):
         # x_audio_D = x_audio
         # x_text_D = x_text
 
+        # 获取模态特定特征
         x_vision_specific_D = self.specific_projection_v(x_vision_D)
         x_audio_specific_D = self.specific_projection_a(x_audio_D)
         x_text_specific_D = self.specific_projection_l(x_text_D)
+        # 获取模态间通用特征
         x_vision_invariant_D = self.invariant_projection(x_vision_D)
         x_audio_invariant_D = self.invariant_projection(x_audio_D)
         x_text_invariant_D = self.invariant_projection(x_text_D)

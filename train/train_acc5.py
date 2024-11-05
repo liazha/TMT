@@ -15,8 +15,10 @@ import argparse
 from core.metric import MetricsTop
 from torch.autograd import Variable
 from core.metric import cal_acc5
+import time
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 USE_CUDA = torch.cuda.is_available()
 device = torch.device("cuda" if USE_CUDA else "cpu")
 print(device)
@@ -24,8 +26,9 @@ print(device)
 
 parser = argparse.ArgumentParser()
 # dataset
-parser.add_argument("--datasetName", type=str, default="sims", required=False)
-parser.add_argument("--dataPath", type=str, default=r"//home/yuanyuan/ygh/unaligned_39.pkl", required=False)
+parser.add_argument("--datasetName", type=str, default="mosi", required=False)
+# 数据集特征是通过MMSA-FET toolkit提取的，保存到了Processed文件夹下
+parser.add_argument("--dataPath", type=str, default=r"D:\datasets\MOSI\Processed\unaligned_50.pkl", required=False)
 parser.add_argument("--use_bert", type=bool, default=False, required=False)
 parser.add_argument("--need_data_aligned", type=bool, default=True, required=False)
 parser.add_argument("--need_truncated", type=bool, default=True, required=False)
@@ -34,7 +37,7 @@ parser.add_argument("--seq_lens", type=tuple, default=[30,30,30], required=False
 #parser.add_argument("--batch_size", type=int, default=16, required=False)
 parser.add_argument("--batch_size", type=int, default=64, required=False)
 parser.add_argument("--num_workers", type=int, default=0, required=False)
-parser.add_argument("--train_mode", type=str, default='regression', required=False)  # regression   classification 
+parser.add_argument("--train_mode", type=str, default='classification', required=False)  # regression   classification
 args = parser.parse_args()
 
 project_name = "train5_26" 
@@ -47,7 +50,8 @@ F1_score_3=0
 Acc_3=0
 
 n_epochs=200
-learning_rate = 1e-4
+# learning_rate = 1e-4
+learning_rate = 1e-5
 
 Mult_acc_2=0
 Mult_acc_3=0
@@ -61,7 +65,7 @@ def main():
     log_path = os.path.join(os.path.join("./log", project_name))
     print("log_path :", log_path)
 
-    save_path = os.path.join("./checkpoint",  project_name)
+    save_path = './checkpoint'
     print("model_save_path :", save_path)
     model = MyMultimodal_Integrally(num_classs = 5,
                         visual_seq_len=50,
@@ -96,7 +100,7 @@ def main():
     # 0.1  47.48
     #1.0  46.82
     #10 46.78
-    loss_fn = MultimodalLoss(alpha=0.01, beta=1,delta=10, batch_size=batchsize, device=device)
+    loss_fn = MultimodalLoss(alpha=0.01, beta=1, delta=10, batch_size=batchsize, device=device)
     # if args.train_mode == 'classification':
     #     loss_fn = MultimodalLoss(alpha=0.01, beta=0.01, delta=1, batch_size=batchsize, device=device)
     #     loss_fn = MultimodalLoss(alpha=0.01, beta=0.01, delta=1, batch_size=batchsize, device=device)
@@ -111,6 +115,7 @@ def main():
         evaluate(model, dataLoader['test'], optimizer, loss_fn, epoch, writer, save_path)
         scheduler_warmup.step()
     writer.close()
+    torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
 
 
 
@@ -135,6 +140,8 @@ def train(model, train_loader, optimizer, loss_fn, epoch, writer):
         #     label = sample['labels']['M'].long().squeeze().to(device)
         # else:
         #     label = sample['labels']['M'].squeeze().to(device)
+
+        # 对label值做一个映射
         label = sample['labels']['M']
         label = torch.where(label==0, torch.tensor(2.), label)
         label = torch.where(label==1.0, torch.tensor(4.), label)
@@ -171,13 +178,13 @@ def train(model, train_loader, optimizer, loss_fn, epoch, writer):
         # stat(model,input_a)
         # exit(0)
         x_invariant, x_specific_a, x_specific_v, x_specific_t, cls_output, x_visual, x_audio, x_text = model(x_vision, x_audio, x_text)
-        # print(cls_output.shape)
+        # print(f'cls_output: {cls_output.shape}')
         # exit(0)
         loss, orth_loss, sim_loss, cls_loss, acc_batch = loss_fn(
             x_invariant, x_specific_a, 
             x_specific_v, x_specific_t,
             x_visual, x_audio, x_text,
-            cls_output, label, epoch)
+            cls_output, label, epoch) # cls_output (64, 32) label (64)
         # print(loss)
         # exit(0)
         #D0_visual_op, D0_audio_op, D0_text_op, D2_visual_op, D2_audio_op, D2_text_op, cls_output,a,b,c = model(x_vision, x_audio, x_text)
@@ -326,11 +333,14 @@ def evaluate(model, eval_loader, optimizer, loss_fn, epoch, writer, save_path):
     eval_results = cal_acc5(pred, true)
     if eval_results['Mult_acc_5'] > Mult_acc_5:
         Mult_acc_5 = eval_results['Mult_acc_5']
-        #save_model(save_path, epoch, model, optimizer, eval_results['Mult_acc_5'], eval_results['Mult_acc_5'], eval_results['F1_score_5'], 2)
+        save_model(save_path, epoch, model, optimizer, eval_results['Mult_acc_5'], eval_results['Mult_acc_5'], eval_results['F1_score_5'], 2)
     if eval_results['F1_score_5'] > F1_score_5:
         F1_score_5 = eval_results['F1_score_5']
     print("eval_results; Mult_acc_5: ", Mult_acc_5, "F1_score_5: ", F1_score_5)
 
 if __name__ == '__main__':
     setup_seed(12345)
+    start_timne = time.time()
     main()
+    end_time = time.time()
+    print(f'执行时间：{end_time - start_timne}秒')
