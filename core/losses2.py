@@ -104,8 +104,8 @@ class MultimodalLoss(nn.Module):
         self.beta = beta
         self.delta = delta
         self.device = device
-        self.cls_fn =  nn.CrossEntropyLoss() 
-        #self.cls_fn =  nn.MSELoss() 
+        self.cls_fn =  nn.CrossEntropyLoss() # 交叉熵损失，用于分类任务
+        # self.cls_fn =  nn.MSELoss() # 均方误差损失，用户回归任务
         self.orth_fn = OrthLoss()
 
 
@@ -122,11 +122,47 @@ class MultimodalLoss(nn.Module):
 
         sim_loss = (MmdLoss(x_audio.mean(dim=1), x_specific_a.mean(dim=1)) + MmdLoss(x_visual.mean(dim=1), x_specific_v.mean(dim=1)) \
                    + MmdLoss(x_text.mean(dim=1), x_specific_t.mean(dim=1))) / 3
-
+        
+        # print(cls_output.shape)
+        # exit(0) 
         cls_loss = self.cls_fn(cls_output, cls_label)
-       
+        # print(cls_loss)
+        # exit(0)       
         loss =  self.alpha * orth_loss + self.beta * sim_loss + self.delta * cls_loss
 
         acc = calculate_accuracy(cls_output, cls_label)
 
         return loss, orth_loss, sim_loss, cls_loss, acc
+
+
+class MultimodalDeapLoss(nn.Module):
+    def __init__(self, alpha, beta, delta, batch_size=16, device='cuda'):
+        super().__init__()
+        self.alpha = alpha
+        self.beta = beta
+        self.delta = delta
+        self.device = device
+        # self.cls_fn =  nn.CrossEntropyLoss() # 交叉熵损失，用于分类任务
+        self.cls_fn = nn.MSELoss()  # 均方误差损失，用户回归任务
+        self.orth_fn = OrthLoss()
+
+    def forward(self, x_invariant, x_specific_v, x_specific_e, x_visual, x_eeg, cls_output,
+                cls_label, epoch):
+        orth_loss1 = ( self.orth_fn(x_invariant.mean(dim=1), x_specific_v.mean(dim=1))
+                       + self.orth_fn(x_invariant.mean(dim=1), x_specific_e.mean(dim=1))) / 2
+
+        orth_loss2 = self.orth_fn(x_specific_v.mean(dim=1), x_specific_e.mean(dim=1))
+
+        orth_loss = orth_loss1 + orth_loss2
+
+        sim_loss = ( MmdLoss(x_visual.mean(dim=1), x_specific_v.mean(dim=1))
+                     + MmdLoss(x_eeg.mean(dim=1), x_specific_e.mean(dim=1))) / 2
+
+        # print(cls_output.shape)
+        # exit(0)
+        cls_loss = self.cls_fn(cls_output, cls_label.to(torch.float32))
+        # print(cls_loss)
+        # exit(0)
+        loss = self.alpha * orth_loss + self.beta * sim_loss + self.delta * cls_loss
+
+        return loss, orth_loss, sim_loss, cls_loss

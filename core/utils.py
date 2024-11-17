@@ -84,6 +84,9 @@ def normlize(x):
 
 
 def setup_seed(seed):
+    """
+    设置生成随机数的种子，方面复现结果
+    """
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
@@ -160,7 +163,7 @@ def mixup_data(img, audio, text, y, alpha=1.0, device='cpu'):
         lam = 1
 
     batch_size = img.size()[0]
-
+    # 随机打乱顺序
     index = torch.randperm(batch_size).to(device)
 
     mixed_img = lam * img + (1 - lam) * img[index, :]
@@ -176,3 +179,20 @@ def mixup_data(img, audio, text, y, alpha=1.0, device='cpu'):
 #     random.seed(seed)
 #     torch.backends.cudnn.benchmark = False
 #     torch.backends.cudnn.deterministic = True
+
+def mixup_data_deap(visual, eeg, y, alpha=1.0, device='cpu'):
+    '''Returns mixed inputs, pairs of targets, and lambda'''
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+
+    batch_size = visual.size()[0]
+    # 随机打乱顺序
+    index = torch.randperm(batch_size).to(device)
+
+    mixed_visual = lam * visual + (1 - lam) * visual[index, :]
+    mixed_eeg = lam * eeg + (1 - lam) * eeg[index, :]
+    y_a, y_b = y, y[index]
+
+    return mixed_visual, mixed_eeg, y_a, y_b, lam

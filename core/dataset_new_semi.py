@@ -5,8 +5,7 @@ import numpy as np
 import random
 import torch
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
+from torch.utils.data import Dataset, DataLoader, RandomSampler, SequentialSampler
 __all__ = ['MMDataLoader2']
 
 logger = logging.getLogger('MSA')

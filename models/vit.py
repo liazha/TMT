@@ -89,11 +89,11 @@ class Attention(nn.Module):
         b, n, _, h = *q.shape, self.heads
         # qkv = self.to_qkv(x).chunk(3, dim = -1)
 
-        q = self.to_q(q)
-        k = self.to_k(k)
-        v = self.to_v(v)
+        q = self.to_q(q) # (64, 72, 512)
+        k = self.to_k(k) # (64, 72, 512)
+        v = self.to_v(v) # (64, 72, 512)
 
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=h), (q, k, v))
+        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=h), (q, k, v)) # (64, 8, 72, 64)
         # print("2", q.shape, k.shape, v.shape)
         dots = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
 
@@ -205,7 +205,7 @@ class ProjetTransformer(nn.Module):
         # x = self.to_patch_embedding(img)
         b, n, _ = input.shape
         projet_tokens = repeat(self.cls_token, '1 f d -> b f d', b = b)
-        x = torch.cat((projet_tokens, input), dim=1)
+        x = torch.cat((projet_tokens, input), dim=1) # 64, 1044, 256
         x = x + self.pos_embedding
         x = self.dropout(x)
         x = self.encoder(x)
