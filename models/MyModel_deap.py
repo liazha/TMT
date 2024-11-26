@@ -40,9 +40,10 @@ class MyMultimodal_Integrally(nn.Module):
         # self.bertmodel = BertTextEncoder(use_finetune=True, transformers='bert', pretrained='bert-base-uncased')
 
         # deap
-        numlayer = 256
+        numlayer = 512
         self.proj_eeg = nn.Sequential(
             PatchEmbedding(32),
+            # nn.Sigmoid(),
             nn.Linear(40, numlayer)
         )
         self.proj_visual = nn.Linear(217, numlayer)
@@ -85,6 +86,7 @@ class MyMultimodal_Integrally(nn.Module):
 
         self.cls_head = nn.Sequential(
             nn.Linear(numlayer, 128),
+            # nn.Sigmoid(),
             nn.Linear(128, num_classs)
         )
         # self.cls_head = nn.Sequential(

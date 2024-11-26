@@ -52,7 +52,7 @@ Has0_F1_score=0
 F1_score_3=0
 Acc_3=0
 
-n_epochs=10
+n_epochs=50
 # learning_rate = 1e-4
 learning_rate = 1e-4
 
@@ -134,7 +134,6 @@ def train(model, train_loader, optimizer, loss_fn, epoch, writer):
         x_visual, x_eeg, lebel_a, lebel_b, lam = mixup_data_deap(x_visual, x_eeg, label, 1.0, device=device)
         x_visual, x_eeg, lebel_a, lebel_b = map(Variable, (x_visual, x_eeg, lebel_a, lebel_b))
 
-        model.zero_grad()
         x_invariant, x_specific_v, x_specific_e, cls_output, x_visual, x_eeg = model(x_visual, x_eeg)
 
         loss, orth_loss, sim_loss, cls_loss = loss_fn(
@@ -145,7 +144,7 @@ def train(model, train_loader, optimizer, loss_fn, epoch, writer):
         print(f'epoch: {epoch} | batch: {batch} | loss: {loss} | orth_loss: {orth_loss} | sim_loss: {sim_loss} | cls_loss: {cls_loss} ')
         loss.backward()
         optimizer.step()
-        # optimizer.zero_grad()
+        optimizer.zero_grad()
 
 
 def evaluate(model, eval_loader, optimizer, loss_fn, epoch, writer, save_path):

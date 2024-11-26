@@ -142,8 +142,8 @@ class MultimodalDeapLoss(nn.Module):
         self.beta = beta
         self.delta = delta
         self.device = device
-        # self.cls_fn =  nn.CrossEntropyLoss() # 交叉熵损失，用于分类任务
-        self.cls_fn = nn.MSELoss()  # 均方误差损失，用户回归任务
+        self.cls_fn =  nn.CrossEntropyLoss() # 交叉熵损失，用于分类任务
+        # self.cls_fn = nn.MSELoss()  # 均方误差损失，用户回归任务
         self.orth_fn = OrthLoss()
 
     def forward(self, x_invariant, x_specific_v, x_specific_e, x_visual, x_eeg, cls_output,
@@ -160,7 +160,9 @@ class MultimodalDeapLoss(nn.Module):
 
         # print(cls_output.shape)
         # exit(0)
-        cls_loss = self.cls_fn(cls_output, cls_label.to(torch.float32))
+        # cls_loss = self.cls_fn(cls_output, cls_label.to(torch.float32))
+
+        cls_loss = self.cls_fn(cls_output, cls_label)
         # print(cls_loss)
         # exit(0)
         loss = self.alpha * orth_loss + self.beta * sim_loss + self.delta * cls_loss
